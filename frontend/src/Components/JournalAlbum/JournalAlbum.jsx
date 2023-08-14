@@ -14,7 +14,7 @@ const JournalAlbum = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentJournal, setCurrentJournal] = useState("");
   const [imageURLs, setImageURLs] = useState([]);
-  // const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   //TODO default cover image without re-rendering
   // const defaultCoverImage = 'https://images.pexels.com/photos/669986/pexels-photo-669986.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
@@ -70,7 +70,7 @@ const JournalAlbum = ({
       "ObPMaZKwS1wvcaQJAHUkbW9dryeMn2WgxOyIJCGH7NwMo0tRFpgcZgvx"
     );
 
-    client.photos
+    return client.photos
       .search({ query, per_page: 1 })
       .then((photo) => {
         setImageURLs((prevImageURLs) => [
@@ -84,18 +84,30 @@ const JournalAlbum = ({
   };
 
   useEffect(() => {
-    //TODO collect promises and use Promise.all
-    journalList.forEach((journal) => {
-      getPexelImage(journal.title, journal.id);
-    });
-    contributedJournals.forEach((journal) => {
-      getPexelImage(journal.title, journal.id);
-    });
+    async function getImages() {
+      const journalImagePromises = journalList.map((journal) => {
+        return getPexelImage(journal.title, journal.id);
+      });
+      const contributedImagePromises = contributedJournals.map((journal) => {
+        return getPexelImage(journal.title, journal.id);
+      });
+
+      await Promise.all(journalImagePromises);
+      await Promise.all(contributedImagePromises);
+      setLoading(false);
+    }
+
+    setLoading(true);
+    getImages();
   }, [journalList, contributedJournals]);
 
-  // if (loading) {
-  //     return <Loading />;
-  // }
+  if (loading) {
+    return (
+      <>
+        <p>Hello Loading</p>
+      </>
+    );
+  }
 
   return (
     <>
